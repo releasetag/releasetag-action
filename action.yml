@@ -1,0 +1,14 @@
+name: 'ReleaseTag-Action'
+description: 'Publish and update release notes using ReleaseTag'
+inputs:
+  version:
+    description: 'Release Version'
+    required: true
+  previous-tag:
+    description: 'Tag of last release'
+    required: false
+runs:
+  using: "composite"
+  steps:    
+    - run: releasetag.sh -v ${{ inputs.version }} -p ${{ inputs.previous-tag }}
+      shell: bash
