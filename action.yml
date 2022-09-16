@@ -1,0 +1,15 @@
+name: 'ReleaseTag'
+description: 'Update release notes on ReleaseTag'
+inputs:
+  token:
+    description: 'Secret token found at app.releasetag.com/account'
+    required: true
+  last-release-pattern:
+    description: 'Last tag to use for previous release'
+    required: false
+outputs:
+  time: # id of output
+    description: 'The time we greeted you'
+runs:
+  using: 'node16'
+  main: 'index.js'
