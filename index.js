@@ -2,29 +2,6 @@ const core = require('@actions/core');
 const github = require('@actions/github');
 const spawn = require('child-process-promise').spawn;
 
-try {
-  const token = core.getInput('token');
-  request.post(
-    'https://api.releasetag.com/updaterelease',
-    { token },
-    function (error, response, body) {
-        if (!error && response.statusCode == 200) {
-            console.log(body)
-        }
-    }
-  )
-} catch (error) {
-  core.setFailed(error.message);
-}
-
-async function commitHeadersSinceVersion(version) {
-  const commitsSinceLastVersionOutput = await spawn(
-    'git', ['log', '--no-decorate', `${version}..HEAD`, '--oneline'],
-    {capture: [ 'stdout', 'stderr' ]},
-  )
-  return commitsSinceLastVersionOutput.stdout.trim().split('\n');
-}
-
 // Returns tag of last release
 async function getLastReleaseTag(pattern) {
   let arguments = ['describe', 'HEAD', '--tags', '--abbrev=0']
@@ -37,11 +14,37 @@ async function getLastReleaseTag(pattern) {
 
 // Returns array of notes since last release with a tag matching a pattern
 async function getReleaseNotes(pattern) {
-  let arguments = ['log', '-pretty=format:"%s"']
+  let arguments = ['log', '--oneline"']
   const lastReleaseTag = await getLastReleaseTag(pattern)
   if (lastReleaseTag) {
     arguments.push(`${lastReleaseTag}..HEAD`)
   }
-  const output = await spawn('git', arguments)
+  const output = await spawn('git', arguments, { capture: [ 'stdout', 'stderr' ] })
   return output.stdout.trim().split('\n')
 }
+
+async function sendPost(url, options) {
+  return new Promise((resolve, reject) => {
+    request(url, options, (error, response, body) => {
+      if (error || response.statusCode < 200 || response.statusCode > 299) {
+        return reject(error)
+      } else {
+        return resolve(body)
+      }
+    })
+  })
+}
+
+async function execute() {
+  try {
+    const token = core.getInput('token')
+    const pattern = core.getInput('last-release-pattern')
+    const notes = await getReleaseNotes(pattern)
+    const result = await sendPost('https://api.releasetag.com/updaterelease', { token, notes })
+    console.log(result)
+  } catch (error) {
+    core.setFailed(error.message)
+  }
+}
+
+execute()
