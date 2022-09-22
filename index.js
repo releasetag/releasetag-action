@@ -1,6 +1,7 @@
-const core = require('@actions/core');
-const github = require('@actions/github');
-const spawn = require('child-process-promise').spawn;
+const core = require('@actions/core')
+const github = require('@actions/github')
+const spawn = require('child-process-promise').spawn
+const https = require('https')
 
 // Compile with:
 // ncc build index.js --license licenses.txt
@@ -32,15 +33,43 @@ async function getReleaseNotes(pattern) {
   return output.stdout.trim().split('\n')
 }
 
-async function sendPost(url, options) {
+async function sendPost(url, data) {
+  const dataString = JSON.stringify(data)
+
+  const options = {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Content-Length': dataString.length,
+    },
+    timeout: 1000, // in ms
+  }
+
   return new Promise((resolve, reject) => {
-    request(url, options, (error, response, body) => {
-      if (error || response.statusCode < 200 || response.statusCode > 299) {
-        return reject(error)
-      } else {
-        return resolve(body)
+    const req = https.request(url, options, (res) => {
+      if (res.statusCode < 200 || res.statusCode > 299) {
+        return reject(new Error(`HTTP status code ${res.statusCode}`))
       }
+
+      const body = []
+      res.on('data', (chunk) => body.push(chunk))
+      res.on('end', () => {
+        const resString = Buffer.concat(body).toString()
+        resolve(resString)
+      })
     })
+
+    req.on('error', (err) => {
+      reject(err)
+    })
+
+    req.on('timeout', () => {
+      req.destroy()
+      reject(new Error('Request time out'))
+    })
+
+    req.write(dataString)
+    req.end()
   })
 }
 
