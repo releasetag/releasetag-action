@@ -12180,9 +12180,10 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
-const core = __nccwpck_require__(7499);
-const github = __nccwpck_require__(6829);
-const spawn = (__nccwpck_require__(6273).spawn);
+const core = __nccwpck_require__(7499)
+const github = __nccwpck_require__(6829)
+const spawn = (__nccwpck_require__(6273).spawn)
+const https = __nccwpck_require__(5687)
 
 // Compile with:
 // ncc build index.js --license licenses.txt
@@ -12214,15 +12215,43 @@ async function getReleaseNotes(pattern) {
   return output.stdout.trim().split('\n')
 }
 
-async function sendPost(url, options) {
+async function sendPost(url, data) {
+  const dataString = JSON.stringify(data)
+
+  const options = {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Content-Length': dataString.length,
+    },
+    timeout: 1000, // in ms
+  }
+
   return new Promise((resolve, reject) => {
-    request(url, options, (error, response, body) => {
-      if (error || response.statusCode < 200 || response.statusCode > 299) {
-        return reject(error)
-      } else {
-        return resolve(body)
+    const req = https.request(url, options, (res) => {
+      if (res.statusCode < 200 || res.statusCode > 299) {
+        return reject(new Error(`HTTP status code ${res.statusCode}`))
       }
+
+      const body = []
+      res.on('data', (chunk) => body.push(chunk))
+      res.on('end', () => {
+        const resString = Buffer.concat(body).toString()
+        resolve(resString)
+      })
     })
+
+    req.on('error', (err) => {
+      reject(err)
+    })
+
+    req.on('timeout', () => {
+      req.destroy()
+      reject(new Error('Request time out'))
+    })
+
+    req.write(dataString)
+    req.end()
   })
 }
 
