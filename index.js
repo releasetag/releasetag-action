@@ -23,7 +23,7 @@ async function getLastReleaseTag(pattern) {
 
 // Returns array of notes since last release with a tag matching a pattern
 async function getReleaseNotes(pattern) {
-  let arguments = ['log', '--oneline"']
+  let arguments = ['log', '--oneline']
   const lastReleaseTag = await getLastReleaseTag(pattern)
   if (lastReleaseTag) {
     arguments.push(`${lastReleaseTag}..HEAD`)
