@@ -12184,6 +12184,9 @@ const core = __nccwpck_require__(7499);
 const github = __nccwpck_require__(6829);
 const spawn = (__nccwpck_require__(6273).spawn);
 
+// Compile with:
+// ncc build index.js --license licenses.txt
+
 // Returns tag of last release
 async function getLastReleaseTag(pattern) {
   let arguments = ['describe', 'HEAD', '--tags', '--abbrev=0']
@@ -12201,8 +12204,14 @@ async function getReleaseNotes(pattern) {
   if (lastReleaseTag) {
     arguments.push(`${lastReleaseTag}..HEAD`)
   }
-  const output = await spawn('git', arguments, { capture: [ 'stdout', 'stderr' ] })
-  return output.stdout.trim().split('\n')
+  try {
+    const output = await spawn('git', arguments, { capture: [ 'stdout', 'stderr' ] })
+    return output.stdout.trim().split('\n')
+  } catch {
+    // No tags
+    const output = await spawn('git', ['rev-list', '--max-parents=0', 'HEAD'], { capture: [ 'stdout', 'stderr' ] })
+    return output.stdout.trim().split('\n')
+  }
 }
 
 async function sendPost(url, options) {
