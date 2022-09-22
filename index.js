@@ -11,8 +11,14 @@ async function getLastReleaseTag(pattern) {
   if (pattern) {
     arguments.push(`--match "${pattern}"`)
   }
-  const output = await spawn('git', arguments)
-  return output.stdout.trim()
+  try {
+    const output = await spawn('git', arguments)
+    return output.stdout.trim()
+  } catch {
+    // No tags
+    const output = await spawn('git', ['rev-list', '--max-parents=0', 'HEAD'], { capture: [ 'stdout', 'stderr' ] })
+    return output.stdout.trim().split('\n')
+  }
 }
 
 // Returns array of notes since last release with a tag matching a pattern
@@ -22,14 +28,8 @@ async function getReleaseNotes(pattern) {
   if (lastReleaseTag) {
     arguments.push(`${lastReleaseTag}..HEAD`)
   }
-  try {
-    const output = await spawn('git', arguments, { capture: [ 'stdout', 'stderr' ] })
-    return output.stdout.trim().split('\n')
-  } catch {
-    // No tags
-    const output = await spawn('git', ['rev-list', '--max-parents=0', 'HEAD'], { capture: [ 'stdout', 'stderr' ] })
-    return output.stdout.trim().split('\n')
-  }
+  const output = await spawn('git', arguments, { capture: [ 'stdout', 'stderr' ] })
+  return output.stdout.trim().split('\n')
 }
 
 async function sendPost(url, options) {
