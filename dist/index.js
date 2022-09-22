@@ -12260,7 +12260,7 @@ async function execute() {
     const token = core.getInput('token')
     const pattern = core.getInput('last-release-pattern')
     const notes = await getReleaseNotes(pattern)
-    const result = await sendPost('https://api.releasetag.com/updaterelease', { token, notes })
+    const result = await sendPost('https://us-central1-releasetag-2ca86.cloudfunctions.net/updateRelease', { token, notes })
     console.log(result)
   } catch (error) {
     core.setFailed(error.message)
