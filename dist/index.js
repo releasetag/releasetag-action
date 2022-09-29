@@ -12262,11 +12262,12 @@ async function execute() {
     const token = core.getInput('token')
     const platform = core.getInput('platform')
     const product = core.getInput('product')
+    const version = core.getInput('version')
     const pattern = core.getInput('last-release-pattern')
     const notes = await getReleaseNotes(pattern)
     console.log(notes)
     console.log('Updating release...')
-    const result = await sendPost('https://us-central1-releasetag-2ca86.cloudfunctions.net/updateRelease', { token, notes, product, platform })
+    const result = await sendPost('https://us-central1-releasetag-2ca86.cloudfunctions.net/updateRelease', { token, notes, product, platform, version })
     console.log(result)
   } catch (error) {
     console.log('Error: ' + error.message)

@@ -10,6 +10,9 @@ inputs:
   platform:
     description: 'Name of platform you are updating'
     required: false
+  version:
+    description: 'Release version'
+    required: true
   last-release-pattern:
     description: 'Last tag to use for previous release'
     required: false
