@@ -12224,9 +12224,11 @@ async function sendPost(url, data) {
       'Content-Type': 'application/json',
       'Content-Length': dataString.length,
     },
-    timeout: 1000, // in ms
+    timeout: 5000, // in ms
   }
 
+  console.log('Sending post to ' + url)
+  console.log(data)
   return new Promise((resolve, reject) => {
     const req = https.request(url, options, (res) => {
       if (res.statusCode < 200 || res.statusCode > 299) {
@@ -12258,11 +12260,16 @@ async function sendPost(url, data) {
 async function execute() {
   try {
     const token = core.getInput('token')
+    const platform = core.getInput('platform')
+    const product = core.getInput('product')
     const pattern = core.getInput('last-release-pattern')
     const notes = await getReleaseNotes(pattern)
-    const result = await sendPost('https://us-central1-releasetag-2ca86.cloudfunctions.net/updateRelease', { token, notes })
+    console.log(notes)
+    console.log('Updating release...')
+    const result = await sendPost('https://us-central1-releasetag-2ca86.cloudfunctions.net/updateRelease', { token, notes, product, platform })
     console.log(result)
   } catch (error) {
+    console.log('Error: ' + error.message)
     core.setFailed(error.message)
   }
 }

@@ -4,6 +4,12 @@ inputs:
   token:
     description: 'Secret token found at app.releasetag.com/account'
     required: true
+  product:
+    description: 'Name of product you are updating'
+    required: true
+  platform:
+    description: 'Name of platform you are updating'
+    required: false
   last-release-pattern:
     description: 'Last tag to use for previous release'
     required: false
